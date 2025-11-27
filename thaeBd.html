@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Happy Birthday to My Love!</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for background and layout */
+        body {
+            background-color: #0d1117; /* Dark background */
+            font-family: 'Inter', sans-serif;
+            overflow: hidden; 
+            height: 100vh;
+        }
+
+        /* --- Global Layers --- */
+        #fireworks-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0; 
+        }
+        
+        /* Main Content */
+        #main-content {
+            position: relative;
+            z-index: 10;
+            min-height: 100vh;
+            display: none; 
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            opacity: 0;
+            transition: opacity 1.5s ease-in-out;
+        }
+        
+        /* Envelope Screen (Splash Screen) */
+        #envelope-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #0d1117;
+            z-index: 20;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 1s ease-in-out;
+        }
+
+        /* --- Envelope Styling (Emerald Green & Gold) --- */
+        .envelope-wrapper {
+            cursor: pointer;
+            perspective: 1200px;
+            width: 300px;
+            height: 200px;
+            position: relative;
+        }
+        
+        .envelope {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            background-color: #004d40; 
+            border-radius: 12px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4), 0 0 10px rgba(0, 77, 64, 0.5); 
+            transition: transform 1s, box-shadow 1s;
+        }
+
+        /* Envelope Flap */
+        .envelope::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100px; 
+            background-color: #00695c; 
+            clip-path: polygon(0 0, 100% 0, 50% 50%);
+            transform-origin: top;
+            transition: transform 1s, box-shadow 1s;
+            z-index: 2;
+            box-shadow: inset 0 5px 10px rgba(0, 0, 0, 0.1); 
+        }
+
+        /* Envelope Flap Open State */
+        .envelope.open::before {
+            transform: rotateX(180deg);
+            z-index: 0; 
+            box-shadow: none; 
+        }
+
+        /* Gold Seal/Stamp */
+        .envelope::after {
+            content: '';
+            position: absolute;
+            top: 98px; 
+            left: 50%;
+            transform: translateX(-50%);
+            width: 30px;
+            height: 30px;
+            background-color: #FFD700; 
+            border-radius: 50%;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5), inset 0 0 5px rgba(255, 255, 255, 0.5);
+            z-index: 3; 
+            transition: opacity 0.5s;
+        }
+        
+        /* Hide seal when opening */
+        .envelope.open::after { opacity: 0; }
+        
+        /* Envelope Content Text */
+        .envelope-text {
+            position: absolute;
+            top: 70%; 
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #FFD700; 
+            font-size: 0.8rem; 
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5); 
+            z-index: 4; 
+            transition: opacity 0.5s;
+        }
+        
+        /* Hide text when opening starts */
+        .envelope.opening .envelope-text { opacity: 0; }
+
+        /* --- CAKE SCREEN STYLING (CSS 2D SIDE VIEW CAKE) --- */
+        #cake-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #0d1117;
+            z-index: 15; 
+            display: none; 
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 1s ease-in-out;
+        }
+        
+        #cake-container {
+            width: 300px; 
+            height: 300px; 
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transform: scale(1); 
+        }
+        
+        /* Cake Plate (2D) */
+        #cake-plate {
+            width: 300px; 
+            height: 10px; 
+            background-color: #ddd; 
+            border-radius: 4px;
+            position: absolute;
+            bottom: 70px; 
+            z-index: 0;
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.3); 
+        }
+        
+        /* New 2D Layered Cake Design */
+        .cake-layer {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            border-radius: 0; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2); 
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            box-sizing: border-box;
+        }
+
+        .cake-layer-bottom {
+            width: 250px;
+            height: 60px;
+            bottom: 80px; 
+            background-color: #f8b4bd; /* Pink base */
+            z-index: 1;
+        }
+
+        .cake-layer-middle {
+            width: 200px;
+            height: 60px;
+            bottom: 140px; 
+            background-color: #FFDAE0; /* Lighter pink */
+            z-index: 2;
+        }
+
+        .cake-layer-top {
+            width: 150px;
+            height: 60px;
+            bottom: 200px; 
+            background-color: #FFEAEC; /* Even lighter pink */
+            z-index: 3;
+        }
+        
+        /* Top Icing for 2D look */
+        #top-icing {
+            position: absolute;
+            /* Corrected position: 300px (container height) - 260px (cake top from bottom) = 40px from top */
+            top: 40px; 
+            left: 50%;
+            transform: translateX(-50%);
+            width: 150px; 
+            height: 10px; 
+            background-color: #fff;
+            z-index: 4;
+            border-radius: 2px 2px 0 0;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Candle Container (Positioned on top of the icing) */
+        #candles-container {
+            position: absolute;
+            /* Corrected position: Icing top is at 40px. Candle height is 30px. 40px - 30px = 10px from top. */
+            top: 10px; 
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+            pointer-events: none; 
+        }
+
+        /* Individual Candle Style (Single Candle) */
+        .candle {
+            position: relative;
+            width: 8px; 
+            height: 30px; 
+            background-color: #4a2a2a; /* Dark brown */
+            border-radius: 2px;
+            box-shadow: 0 0 3px rgba(0, 0, 0, 0.4);
+            pointer-events: all; 
+        }
+        
+        /* Candle Wax Top */
+        .candle::before {
+            content: '';
+            position: absolute;
+            top: -3px;
+            left: -1px;
+            width: 10px;
+            height: 6px;
+            background-color: #e0e0e0; /* White wax drip */
+            border-radius: 50%;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+            z-index: 6;
+        }
+        
+        /* Candle Wick */
+        .candle::after {
+            content: '';
+            position: absolute;
+            top: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 1.5px;
+            height: 6px;
+            background-color: #333;
+            z-index: 7;
+        }
+
+        /* Candle Flame */
+        .flame {
+            position: absolute;
+            top: -22px; 
+            left: 50%;
+            transform: translateX(-50%);
+            width: 12px; 
+            height: 20px;
+            border-radius: 50%;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            z-index: 8;
+        }
+
+        /* Lit Flame State */
+        .flame.lit {
+            opacity: 1;
+            background: 
+                radial-gradient(circle at 50% 10%, #fff 0%, transparent 80%),
+                radial-gradient(circle at 50% 10%, #ffcc00 10%, #ff4500 50%, transparent 80%); 
+            box-shadow: 
+                0 0 10px #ffcc00, 
+                0 0 20px #ff4500, 
+                0 0 40px 15px rgba(255, 69, 0, 0.4); 
+            animation: flicker 0.2s infinite alternate;
+        }
+        
+        @keyframes flicker {
+            0% { transform: translateX(-50%) scale(1, 1); opacity: 0.95; }
+            50% { transform: translateX(-50%) scale(1.05, 1.05); opacity: 1; }
+            100% { transform: translateX(-50%) scale(0.98, 0.98); opacity: 0.9; }
+        }
+
+        .prompt-text {
+            color: white;
+            font-size: 1.25rem;
+            margin-top: 50px;
+            text-shadow: 0 0 5px #f472b6, 0 0 15px rgba(255, 255, 255, 0.5);
+            font-weight: bold;
+            z-index: 5;
+            text-align: center;
+            padding: 0 1rem;
+        }
+
+        /* --- FIREWORKS / MAIN CONTENT STYLING --- */
+        @keyframes text-sparkle-glow {
+            0%, 100% {
+                text-shadow: 0 0 5px rgba(255, 215, 0, 0.4), 0 0 10px rgba(255, 105, 180, 0.3), 0 0 20px rgba(255, 255, 255, 0.5);
+            }
+            50% {
+                text-shadow: 0 0 10px rgba(255, 255, 255, 0.8), 0 0 30px rgba(255, 215, 0, 0.6), 0 0 50px rgba(255, 105, 180, 0.4);
+            }
+        }
+        .text-sparkle-glow {
+            animation: text-sparkle-glow 4s ease-in-out infinite alternate;
+        }
+
+        /* --- PINNED PHOTO STYLES --- */
+        #photo-pin-board {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none; 
+            z-index: 5; 
+            overflow: hidden; 
+        }
+
+        .pinned-photo {
+            position: absolute;
+            width: 140px; 
+            height: 180px; 
+            background-color: #FFFFFF; 
+            padding: 10px 10px 40px 10px; 
+            border-radius: 4px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5); 
+            transition: transform 0.3s ease-in-out, box-shadow 0.3s;
+            cursor: pointer;
+            pointer-events: all; 
+            z-index: 10;
+            box-sizing: content-box; 
+        }
+
+        @media (max-width: 640px) {
+            .pinned-photo {
+                width: 90px;
+                height: 110px;
+                padding: 5px 5px 20px 5px; 
+            }
+        }
+
+        .pinned-photo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+            border-radius: 2px;
+        }
+
+        /* The Pin Effect (Thumbtack) */
+        .pinned-photo::before {
+            content: '';
+            position: absolute;
+            top: -12px; 
+            left: 50%;
+            transform: translateX(-50%);
+            width: 10px;
+            height: 10px;
+            background-color: #f87171; 
+            border-radius: 50%;
+            border: 1px solid #dc2626;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4), inset 0 0 3px rgba(255, 255, 255, 0.7);
+            z-index: 20;
+        }
+        
+        /* Lightbox/Modal Styles */
+        #lightbox {
+            display: none; 
+            position: fixed;
+            z-index: 100; 
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9); 
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        #lightbox-content {
+            max-width: 90vw;
+            max-height: 90vh;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.8); 
+            object-fit: contain;
+            transition: transform 0.3s;
+        }
+
+        #lightbox-close {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            color: #fff;
+            font-size: 40px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.3s;
+            text-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+        }
+        #lightbox-close:hover,
+        #lightbox-close:focus {
+            color: #f472b6;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Firework Canvas (Background) --><canvas id="fireworks-canvas"></canvas>
+
+    <!-- 1. ENVELOPE SPLASH SCREEN (Initial View) --><div id="envelope-screen">
+        <div id="envelope-wrapper" class="envelope-wrapper">
+            <div id="envelope" class="envelope">
+                <span id="envelope-text" class="envelope-text">ဖွင့်ရန် နှိပ်ပါ</span><!-- Burmese: Click to open --></div>
+        </div>
+    </div>
+
+    <!-- 2. CAKE ANIMATION SCREEN (Intermediate View) --><div id="cake-screen">
+        <div id="cake-container">
+            <!-- Cake Plate Element --><div id="cake-plate"></div>
+            
+            <!-- 2D Layered Cake Model -->
+            <div class="cake-layer cake-layer-bottom"></div>
+            <div class="cake-layer cake-layer-middle"></div>
+            <div class="cake-layer cake-layer-top"></div>
+            
+            <!-- Top Icing Layer (Required for 2D flat top look) --><div id="top-icing"></div>
+
+            <!-- Single Candle Container -->
+            <!-- NOTE: Candle positioning is now fixed to sit correctly on the top icing layer. -->
+            <div id="candles-container">
+                <div class="candle">
+                    <div class="flame"></div>
+                </div>
+            </div>
+        </div>
+        <p id="cake-prompt-text" class="prompt-text">ဖယောင်းတိုင်မီးထွန်းဖို ကိတ်ကို နှိပ်ပါ</p></div>
+
+    <!-- 3. MAIN CONTENT (Final View) --><div id="main-content">
+        
+        <!-- Pinned Photo Board Container (Background photos) --><div id="photo-pin-board">
+            
+            <!-- Placeholder images are used. Remember to replace the 'src' attribute with actual image URLs! -->
+            <!-- [Image of a woman smiling] -->
+            <div class="pinned-photo" data-index="1" style="top: 15vh; left: 10vw; transform: rotate(-15deg);">
+                <img src="tae1.jpg" alt="Placeholder Photo 1" onerror="this.src='https://placehold.co/400x500/FF007F/FFFFFF?text=Photo+1'" />
+            </div>
+            <!--  -->
+            <div class="pinned-photo" data-index="2" style="top: 40vh; right: 8vw; transform: rotate(10deg);">
+                <img src="2.jpg" alt="Placeholder Photo 2" onerror="this.src='https://placehold.co/400x500/FF007F/FFFFFF?text=Photo+2'" />
+            </div>
+            <!-- [Image of a puppy] -->
+            <div class="pinned-photo" data-index="3" style="bottom: 10vh; left: 5vw; transform: rotate(5deg);">
+                <img src="3.jpg" alt="Placeholder Photo 3" onerror="this.src='https://placehold.co/400x500/FF007F/FFFFFF?text=Photo+3'" />
+            </div>
+            <!-- [Image of a sunset] -->
+            <div class="pinned-photo" data-index="4" style="top: 5vh; right: 20vw; transform: rotate(25deg);">
+                <img src="./4.jpg" alt="Placeholder Photo 4" onerror="this.src='https://placehold.co/400x500/FF007F/FFFFFF?text=Photo+4'" />
+            </div>
+            <!-- [Image of a teddy bear] -->
+            <div class="pinned-photo" data-index="5" style="bottom: 25vh; left: 25vw; transform: rotate(-7deg);">
+                <img src="./5.jpg" alt="Placeholder Photo 5" onerror="this.src='https://placehold.co/400x500/FF007F/FFFFFF?text=Photo+5'" />
+            </div>
+        </div>
+
+        <!-- Centered Animated HEADING --><h1 id="main-heading" class="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-4xl md:text-8xl font-extrabold text-[#FFD700] tracking-wider text-sparkle-glow z-20 pointer-events-none">
+            Happy Birthday!
+        </h1>
+        
+        <!-- Signature Footer (Bottom Center) --><p id="footer-signature" class="fixed bottom-4 left-0 right-0 text-sm text-gray-400 z-30 text-center">
+            Made with love by Xiao Rang
+        </p>
+    </div>
+
+    <!-- 4. LIGHTBOX MODAL STRUCTURE (Hidden by default) --><div id="lightbox">
+        <span id="lightbox-close">&times;</span>
+        <img id="lightbox-content" src="" alt="Enlarged Photo" />
+    </div>
+
+    <script>
+        // --- GLOBAL STATE ---
+        let cakeState = 0; // 0: Unlit, 1: Lit, 2: Blown Out
+        
+        // --- UI ELEMENT REFERENCES ---
+        const envelope = document.getElementById('envelope');
+        const envelopeScreen = document.getElementById('envelope-screen');
+        const cakeScreen = document.getElementById('cake-screen');
+        const mainContent = document.getElementById('main-content');
+        const cakePromptText = document.getElementById('cake-prompt-text');
+        const cakeContainer = document.getElementById('cake-container'); // The click target
+        const flames = document.querySelectorAll('.flame'); // All flame elements
+
+        // --- 1. FIREWORKS LOGIC (Canvas) ---
+        const fwCanvas = document.getElementById('fireworks-canvas');
+        const fwCtx = fwCanvas.getContext('2d');
+        let fwWidth, fwHeight;
+        let particles = []; 
+        let fireworks = []; 
+        let hue = 0; 
+        let launchInterval = null; 
+        
+        // --- Utility Functions ---
+        function random(min, max) { return Math.random() * (max - min) + min; }
+        
+        function resizeFwCanvas() {
+            fwWidth = fwCanvas.width = window.innerWidth;
+            fwHeight = fwCanvas.height = window.innerHeight;
+            fwCtx.fillStyle = 'rgba(0, 0, 0, 0.04)'; 
+        }
+        window.addEventListener('resize', resizeFwCanvas);
+        resizeFwCanvas();
+
+        class Particle {
+            constructor(x, y, hue, angle, speed, friction, gravity, decay, forcedShape = null) {
+                this.x = x; this.y = y; this.coordLast = [{x: x, y: y}]; 
+                this.angle = angle !== undefined ? angle : random(0, 360); 
+                this.speed = speed !== undefined ? speed : random(1, 10);
+                this.friction = friction !== undefined ? friction : 0.95; 
+                this.gravity = gravity !== undefined ? gravity : 1; 
+                this.hue = hue;
+                this.brightness = random(50, 80);
+                this.alpha = 1; 
+                this.decay = decay !== undefined ? decay : random(0.012, 0.025);
+                this.isSparkle = Math.random() > 0.5; 
+                this.sparkleTimer = this.isSparkle ? random(5, 15) : 0;
+                
+                this.shapeType = forcedShape !== null ? forcedShape : Math.floor(random(0, 3)); 
+            }
+            update(index) {
+                this.coordLast.pop();
+                this.coordLast.unshift({x: this.x, y: this.y});
+                this.speed *= this.friction;
+                
+                const angleRad = this.angle * (Math.PI / 180); 
+                
+                this.x += Math.cos(angleRad) * this.speed;
+                this.y += Math.sin(angleRad) * this.speed + this.gravity;
+                this.alpha -= this.decay;
+                
+                if (this.alpha <= this.decay) {
+                    particles.splice(index, 1);
+                    return false; 
+                }
+                
+                if (this.isSparkle && this.alpha > 0) {
+                    this.sparkleTimer--;
+                    if (this.sparkleTimer <= 0) {
+                        this.brightness = random(70, 100); 
+                        this.sparkleTimer = random(5, 15);
+                    }
+                }
+                return true; 
+            }
+            draw() {
+                fwCtx.beginPath();
+                if (this.isSparkle) {
+                    fwCtx.fillStyle = `hsla(${this.hue}, 100%, ${this.brightness}%, ${this.alpha})`;
+                    const size = random(1.5, 3.0); 
+                    
+                    if (this.shapeType === 1) { 
+                        fwCtx.fillRect(this.x - size / 2, this.y - size / 2, size, size);
+                    } else if (this.shapeType === 2) { 
+                        fwCtx.beginPath();
+                        fwCtx.strokeStyle = `hsla(${this.hue}, 100%, ${this.brightness}%, ${this.alpha})`;
+                        fwCtx.lineWidth = 1;
+                        fwCtx.moveTo(this.x - size, this.y);
+                        fwCtx.lineTo(this.x + size, this.y);
+                        fwCtx.moveTo(this.x, this.y - size);
+                        fwCtx.lineTo(this.x, this.y + size);
+                        fwCtx.stroke();
+                    } else { 
+                        fwCtx.arc(this.x, this.y, size / 2, 0, Math.PI * 2);
+                        fwCtx.fill();
+                    }
+                } else {
+                    fwCtx.moveTo(this.coordLast[this.coordLast.length - 1].x, this.coordLast[this.coordLast.length - 1].y);
+                    fwCtx.lineTo(this.x, this.y);
+                    fwCtx.strokeStyle = `hsla(${this.hue}, 100%, ${this.brightness}%, ${this.alpha})`;
+                    fwCtx.lineWidth = 1;
+                    fwCtx.stroke();
+                }
+            }
+        }
+
+        class Firework {
+            constructor(startX, startY, endX, endY) {
+                this.x = startX; this.y = startY;
+                this.startX = startX; this.startY = startY;
+                this.endX = endX; this.endY = endY;
+                this.coordLast = [{x: startX, y: startY}]; 
+                this.distanceToEnd = this.calculateDistance(startX, startY, endX, endY);
+                this.distanceTraveled = 0;
+                this.angle = Math.atan2(endY - startY, endX - startX); 
+                this.speed = random(2, 5); 
+                this.acceleration = 1.05;
+                this.brightness = random(50, 80);
+                this.hue = hue;
+                this.targetRadius = 2; 
+                
+                const availableTypes = [0, 5, 6]; 
+                this.explosionType = availableTypes[Math.floor(random(0, availableTypes.length))]; 
+            }
+            calculateDistance(p1x, p1y, p2x, p2y) {
+                const x = p1x - p2x;
+                const y = p1y - p2y;
+                return Math.sqrt(x * x + y * y);
+            }
+            update(index) {
+                this.coordLast.pop();
+                this.coordLast.unshift({x: this.x, y: this.y});
+                this.speed *= this.acceleration;
+
+                const vx = Math.cos(this.angle) * this.speed;
+                const vy = Math.sin(this.angle) * this.speed;
+                this.distanceTraveled = this.calculateDistance(this.startX, this.startY, this.x + vx, this.y + vy);
+
+                if (this.distanceTraveled >= this.distanceToEnd) {
+                    this.x = this.endX; this.y = this.endY;
+                    this.explode();
+                    fireworks.splice(index, 1);
+                    return false; 
+                } else {
+                    this.x += vx; this.y += vy;
+                    return true; 
+                }
+            }
+            
+            explode() {
+                const particlesToGenerate = [];
+                let count = random(50, 80);
+
+                switch (this.explosionType) {
+                    case 0: { // Spherical (Circle Shape)
+                        for (let i = 0; i < count; i++) {
+                            particlesToGenerate.push(new Particle(this.endX, this.endY, this.hue, undefined, undefined, undefined, undefined, undefined, 0));
+                        }
+                        break;
+                    }
+                    case 5: { // Fractal/Chain Reaction (Chain Sparkle)
+                        count = 2; 
+                        for (let i = 0; i < count; i++) {
+                            const offsetX = random(-30, 30); 
+                            const offsetY = random(-30, 30); 
+                            fireworks.push(new Firework(
+                                this.endX, 
+                                this.endY, 
+                                this.endX + offsetX, 
+                                this.endY + offsetY
+                            ));
+                            particlesToGenerate.push(new Particle(this.endX, this.endY, this.hue));
+                        }
+                        break;
+                    }
+                    case 6: { // Cross Shape Explosion
+                        count = random(80, 120); 
+                        for (let i = 0; i < count; i++) {
+                            particlesToGenerate.push(new Particle(this.endX, this.endY, this.hue, undefined, undefined, undefined, undefined, undefined, 2));
+                        }
+                        break;
+                    }
+                    default: 
+                        for (let i = 0; i < count; i++) {
+                            particlesToGenerate.push(new Particle(this.endX, this.endY, this.hue, undefined, undefined, undefined, undefined, undefined, 0));
+                        }
+                }
+                
+                particles.push(...particlesToGenerate);
+                // All sound/audio functions removed here
+            }
+
+            draw() {
+                fwCtx.beginPath();
+                fwCtx.moveTo(this.coordLast[this.coordLast.length - 1].x, this.coordLast[this.coordLast.length - 1].y);
+                fwCtx.lineTo(this.x, this.y);
+                fwCtx.strokeStyle = `hsl(${this.hue}, 100%, ${this.brightness}%)`;
+                fwCtx.lineWidth = 3; 
+                fwCtx.stroke();
+
+                fwCtx.beginPath();
+                fwCtx.arc(this.x, this.y, this.targetRadius, 0, Math.PI * 2);
+                fwCtx.fillStyle = `hsl(${this.hue}, 100%, ${this.brightness}%)`;
+                fwCtx.fill();
+            }
+        }
+
+        function launchFirework() {
+            // Check only if main content is visible
+            if (mainContent.style.display === 'flex') { 
+                hue = random(0, 360);
+                const startX = fwWidth / 2;
+                const startY = fwHeight;
+                const endX = random(50, fwWidth - 50);
+                const endY = random(50, fwHeight * 0.5); 
+                fireworks.push(new Firework(startX, startY, endX, endY));
+                
+                if (Math.random() > 0.85) launchFirework();
+            }
+        }
+
+        function loop() {
+            fwCtx.globalCompositeOperation = 'destination-out';
+            fwCtx.fillStyle = 'rgba(0, 0, 0, 0.5)'; 
+            fwCtx.fillRect(0, 0, fwWidth, fwHeight);
+            fwCtx.globalCompositeOperation = 'lighter';
+
+            for (let i = fireworks.length - 1; i >= 0; i--) {
+                if (fireworks[i].update(i)) {
+                    fireworks[i].draw();
+                }
+            }
+
+            for (let i = particles.length - 1; i >= 0; i--) {
+                if (particles[i].update(i)) {
+                    particles[i].draw();
+                }
+            }
+
+            requestAnimationFrame(loop);
+        }
+
+        launchInterval = setInterval(launchFirework, 300); 
+
+        requestAnimationFrame(loop);
+        
+        // --- 2. TRANSITIONS & CANDLE LOGIC ---
+
+        function openEnvelope() {
+            if (envelope.classList.contains('open')) return;
+            envelope.classList.add('opening');
+            
+            envelope.classList.add('open');
+            
+            setTimeout(() => {
+                envelopeScreen.style.opacity = '0';
+                cakeScreen.style.display = 'flex';
+                
+                setTimeout(() => {
+                    envelopeScreen.style.display = 'none';
+                    cakeScreen.style.opacity = '1';
+                }, 1000); 
+                
+            }, 1000); 
+        }
+
+        envelope.addEventListener('click', openEnvelope);
+        envelope.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            openEnvelope();
+        });
+
+
+        // --- 3. CAKE CANDLE LOGIC ---
+
+        function lightCandles() {
+            if (cakeState !== 0) return; 
+            cakeState = 1;
+
+            flames.forEach(flame => {
+                flame.classList.add('lit');
+            });
+            
+            // Text change after lighting
+            cakePromptText.textContent = "ဆုတောင်းပြီး မီးမှုတ်ဖို့ ကိတ်ကိုပြန်နှိပ်ပါ"; // Burmese: Click again to blow out!
+        }
+
+        function blowOutCandles() {
+            if (cakeState !== 1) return; 
+            cakeState = 2;
+
+            flames.forEach(flame => {
+                flame.classList.remove('lit');
+            });
+
+            // Transition to main screen
+            setTimeout(() => {
+                cakeScreen.style.opacity = '0';
+                mainContent.style.display = 'flex';
+                
+                setTimeout(() => {
+                    cakeScreen.style.display = 'none';
+                    mainContent.style.opacity = '1';
+                }, 1000); 
+                
+            }, 500); 
+            
+            cakePromptText.textContent = "သဲ Happy Birthday ပါ! ပျော်ရွှင်စရာမွေးနေ့ဖြစ်ပါစေနော်။"; // Burmese: Thank you! Happy Birthday!
+        }
+
+        cakeContainer.addEventListener('click', () => {
+            if (cakeState === 0) {
+                lightCandles();
+            } else if (cakeState === 1) {
+                blowOutCandles();
+            }
+        });
+        
+        cakeContainer.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            if (cakeState === 0) {
+                lightCandles();
+            } else if (cakeState === 1) {
+                blowOutCandles();
+            }
+        });
+
+        // --- 4. LIGHTBOX AND PHOTO INTERACTION LOGIC ---
+        const lightbox = document.getElementById('lightbox');
+        const lightboxContent = document.getElementById('lightbox-content');
+        const lightboxClose = document.getElementById('lightbox-close');
+
+        document.querySelectorAll('.pinned-photo').forEach(photo => {
+            photo.addEventListener('click', (e) => {
+                e.stopPropagation(); 
+                const imgSrc = photo.querySelector('img').src;
+                lightboxContent.src = imgSrc;
+                lightbox.style.display = 'flex';
+            });
+        });
+
+        lightboxClose.addEventListener('click', () => {
+            lightbox.style.display = 'none';
+        });
+
+        lightbox.addEventListener('click', (e) => {
+            if (e.target.id === 'lightbox') {
+                lightbox.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
